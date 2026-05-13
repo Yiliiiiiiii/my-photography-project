@@ -1,0 +1,950 @@
+﻿<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>用户管理</title>
+    <style>
+      /* ==================== 鍏ㄥ眬甯冨眬 ==================== */
+      body {
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
+        padding: 40px;
+        margin: 0;
+        color: #2b221c;
+      }
+
+      .container {
+        max-width: 1000px; /* 鍔犲瀹瑰櫒浠ュ绾虫洿澶氭寜閽?*/
+        margin: 0 auto;
+        background: rgba(255, 251, 245, 0.9);
+        padding: 40px;
+        border-radius: 28px;
+        box-shadow: 0 24px 60px rgba(70, 45, 28, 0.10);
+        border: 1px solid rgba(113, 84, 58, 0.10);
+      }
+
+      h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 30px 0;
+      }
+
+      h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0 0 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* ==================== 琛ㄦ牸鏍峰紡 ==================== */
+      .table-wrapper {
+        overflow-x: auto; /* 鍏佽妯悜婊氬姩锛岄槻姝㈢垎琛?*/
+        border-radius: 12px;
+        border: 1px solid #eee;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px; /* 鏈€灏忓搴?*/
+      }
+
+      th,
+      td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #f5f5f5;
+        white-space: nowrap; /* 闃叉鎹㈣ */
+      }
+
+      th {
+        background-color: #fafafa;
+        font-weight: 600;
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      /* 瑙掕壊鏍囩 */
+      .role-tag {
+        display: inline-flex;
+        align-items: center;
+        background-color: #e5e5ea;
+        color: #333;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        margin-right: 5px;
+      }
+      .role-tag.admin {
+        background-color: #ff3b30;
+        color: #fff;
+      }
+      .role-tag.user {
+        background-color: #007aff;
+        color: #fff;
+      }
+
+      /* ==================== 鎸夐挳鏍峰紡 ==================== */
+      .btn {
+        text-decoration: none;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        line-height: 1;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(0.95);
+      }
+      .btn:active {
+        transform: scale(0.96);
+      }
+
+      .btn-edit {
+        background: #b5653b;
+        color: #fff;
+      }
+      .btn-delete {
+        background: #ff3b30;
+        color: #fff;
+      }
+      .btn-tool {
+        background: #d29b42;
+        color: #fff;
+        font-size: 1rem;
+        padding: 12px 24px;
+      }
+      .btn-log {
+        background: #efe7db;
+        color: #5f5045;
+        font-size: 1rem;
+        padding: 12px 20px;
+      }
+      .btn-secondary {
+        background: #f7f0e6;
+        color: #5f5045;
+      }
+      .btn-secondary:hover {
+        background: #e5e5ea;
+        color: #000;
+      }
+
+      /* 鎿嶄綔鏍忓竷灞€ */
+      .action-bar {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* 娑堟伅鎻愮ず */
+      .message {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-weight: 500;
+        font-size: 0.95rem;
+      }
+      .message.success {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+      }
+      .message.error {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+      }
+
+      /* ==================== 寮圭獥绯荤粺 (Modal System) ==================== */
+      .confirm-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: none; /* 榛樿闅愯棌 */
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .confirm-modal-overlay.show {
+        display: flex;
+        opacity: 1;
+      }
+
+      .confirm-modal {
+        background: #fff;
+        width: 420px;
+        max-width: 90%;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        transform: scale(0.95);
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+        display: flex;
+        flex-direction: column;
+      }
+
+      .confirm-modal-overlay.show .confirm-modal {
+        transform: scale(1);
+      }
+
+      /* 寮圭獥鍐呴儴鍏冪礌 */
+      .confirm-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+      }
+      .confirm-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #1d1d1f;
+      }
+      .confirm-text {
+        font-size: 0.95rem;
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 25px;
+      }
+
+      .confirm-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: auto;
+      }
+      .btn-modal {
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        font-size: 0.95rem;
+      }
+      .btn-cancel {
+        background: #f5f5f7;
+        color: #666;
+      }
+      .btn-confirm {
+        background: #ff9500;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+      }
+
+      /* === 缁存姢鎶ュ憡涓撶敤鏍峰紡 (瀹藉脊绐? === */
+      .modal-wide {
+        width: 800px;
+        max-height: 85vh;
+      }
+
+      .log-scroll-box {
+        text-align: left;
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        font-family: "SF Mono", "Menlo", monospace;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        color: #333;
+
+        /* 鏍稿績锛氳嚜閫傚簲婊氬姩 */
+        overflow-y: auto;
+        flex-grow: 1;
+        min-height: 200px;
+        margin-bottom: 20px;
+      }
+
+      /* 缇庡寲婊氬姩鏉?*/
+      .log-scroll-box::-webkit-scrollbar {
+        width: 8px;
+      }
+      .log-scroll-box::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .log-scroll-box::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+      }
+      .log-scroll-box::-webkit-scrollbar-thumb:hover {
+        background: #aaa;
+      }
+
+      /* === 鍔犺浇鍔ㄧ敾 === */
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-left-color: #007aff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px auto;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* 搴曢儴瀵艰埅 */
+      .footer-links {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 15px;
+      }
+      /* 璁垮闆疯揪鏍峰紡琛ヤ竵 */
+      .time-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f5f5f7;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        font-weight: bold;
+        color: #555;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      details.session-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+      summary.session-summary {
+        padding: 10px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        list-style: none;
+      }
+      summary.session-summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .session-left {
+        display: flex;
+        align-items: center;
+      }
+      .action-list {
+        background: #fafafa;
+        border-top: 1px solid #eee;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      /* === 璁垮闆疯揪 4.0 (鏋佺畝鍒楄〃鐗? === */
+
+      /* 1. 鏃堕棿鍒嗘鏍囬 (Sticky) */
+      .time-header {
+        position: sticky;
+        top: 0;
+        background: rgba(255, 255, 255, 0.98); /* 涓嶉€忔槑搴﹂珮涓€鐐癸紝闃叉瀛楅噸鍙?*/
+        padding: 8px 5px;
+        margin: 0;
+        border-bottom: 1px solid #eee;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        z-index: 5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* 2. 浼氳瘽鏉＄洰 (鏃犺竟妗嗭紝绾垪琛? */
+      details.session-row {
+        border-bottom: 1px solid #f5f5f5;
+        background: #fff;
+        transition: background 0.2s;
+      }
+      details.session-row:last-child {
+        border-bottom: none;
+      }
+
+      /* 鎮仠鍙樿壊 */
+      details.session-row:hover {
+        background: #fbfbfb;
+      }
+      details.session-row[open] {
+        background: #f9f9f9;
+      }
+
+      /* 3. 鎽樿琛?(绱у噾甯冨眬) */
+      summary.session-summary {
+        padding: 10px 8px; /* 鍑忓皯鍐呰竟璺?*/
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        outline: none;
+      }
+      summary.session-summary::-webkit-details-marker {
+        display: none;
+      }
+
+      /* 宸︿晶淇℃伅 */
+      .session-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-grow: 1;
+        overflow: hidden;
+      }
+
+      .device-icon {
+        font-size: 1.2rem;
+        width: 32px;
+        height: 32px; /* 鍥炬爣鍙樺皬 */
+        background: #f0f0f5;
+        border-radius: 8px; /* 鍦嗚鐭╁舰 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .user-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .user-name.admin {
+        color: #ff3b30;
+      }
+
+      .user-meta {
+        font-size: 0.75rem;
+        color: #999;
+        display: flex;
+        gap: 8px;
+      }
+
+      /* 鍙充晶缁熻 */
+      .session-right {
+        text-align: right;
+        flex-shrink: 0;
+        margin-left: 10px;
+      }
+      .time-ago {
+        display: block;
+        font-size: 0.75rem;
+        color: #aaa;
+        margin-bottom: 2px;
+      }
+      .action-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #007aff;
+        background: rgba(0, 122, 255, 0.08);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+
+      /* 4. 灞曞紑鍚庣殑璇︽儏 (鍐呭祵鍒楄〃) */
+      .action-list {
+        padding: 0 0 0 50px; /* 宸︾缉杩涳紝涓庢枃瀛楀榻?*/
+        border-top: 1px dashed #eee;
+      }
+      .action-item {
+        display: flex;
+        align-items: center;
+        padding: 6px 10px 6px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.8rem;
+      }
+      .action-item:last-child {
+        border-bottom: none;
+      }
+
+      .method-tag {
+        font-size: 0.65rem;
+        font-weight: 700;
+        width: 36px;
+        margin-right: 8px;
+        flex-shrink: 0;
+      }
+      .method-GET {
+        color: #34c759;
+      }
+      .method-POST {
+        color: #ff9500;
+      }
+      .method-DELETE {
+        color: #ff3b30;
+      }
+
+      .action-url {
+        font-family: "SF Mono", monospace;
+        color: #666;
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .action-time {
+        color: #ccc;
+        font-size: 0.7rem;
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>用户管理面板</h2>
+
+      <div
+        th:if="${success != null and !success.contains('缁存姢鎬荤粨')}"
+        class="message success"
+        th:text="${success}"
+      ></div>
+      <div th:if="${error}" class="message error" th:text="${error}"></div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50px">ID</th>
+              <th>用户名</th>
+              <th>当前角色</th>
+              <th style="width: 200px">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="user : ${users}">
+              <td th:text="${user.id}">1</td>
+              <td style="font-weight: 600" th:text="${user.username}">admin</td>
+              <td>
+                <span
+                  th:each="role : ${user.roles}"
+                  class="role-tag"
+                  th:classappend="${role.name == 'ROLE_ADMIN' ? 'admin' : 'user'}"
+                  th:text="${role.name == 'ROLE_ADMIN' ? '管理员' : '访客'}"
+                >
+                </span>
+              </td>
+              <td>
+                <div class="action-bar">
+                  <a
+                    th:href="@{/admin/users/edit/{id}(id=${user.id})}"
+                    class="btn btn-edit"
+                    >编辑权限</a
+                  >
+                  <form
+                    th:action="@{/admin/users/delete/{id}(id=${user.id})}"
+                    method="POST"
+                    onsubmit="return confirm('警告：删除用户会同时删除该用户的所有评论。确定继续吗？');"
+                  >
+                    <button type="submit" class="btn btn-delete">
+                      删除用户
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr style="margin: 40px 0; border: none; border-top: 1px solid #eee" />
+
+      <h3>维护工具</h3>
+
+      <form
+        id="maintenance-form"
+        th:action="@{/admin/backfill-exif}"
+        method="POST"
+      >
+        <p
+          style="
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+          "
+        >
+          用于修复照片时间、重制缩略图并清理无效数据。
+        </p>
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap">
+          <button
+            type="button"
+            class="btn btn-tool"
+            onclick="showConfirmModal()"
+          >
+            开始全量维护 (EXIF & WebP)
+          </button>
+
+          <button type="button" class="btn btn-log" onclick="fetchAndShowLog()">
+            上次日志
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-log"
+            onclick="window.location.href='/admin/radar'"
+          >
+            访客雷达
+          </button>
+        </div>
+      </form>
+
+      <div class="footer-links">
+        <a th:href="@{/gallery}" class="btn btn-secondary">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          返回画廊首页
+        </a>
+        <a th:href="@{/admin/batch-upload}" class="btn btn-secondary">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          去批量导入
+        </a>
+      </div>
+    </div>
+
+    <div id="custom-confirm" class="confirm-modal-overlay">
+      <div class="confirm-modal">
+        <span class="confirm-icon">⚠️</span>
+        <div class="confirm-title">确定要运行全量维护吗？</div>
+        <div class="confirm-text">
+          这会扫描所有照片，并尝试重建 EXIF 信息与缩略图。<br />
+          如果是强制重建模式，可能需要几分钟时间。<br />
+          请确认当前服务器负载允许执行。
+        </div>
+        <div class="confirm-actions">
+          <button class="btn-modal btn-cancel" onclick="hideConfirmModal()">
+            取消
+          </button>
+          <button class="btn-modal btn-confirm" onclick="submitMaintenance()">
+            确定运行
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading-modal" class="confirm-modal-overlay">
+      <div class="confirm-modal">
+        <div class="spinner"></div>
+        <div class="confirm-title">正在执行维护...</div>
+        <div class="confirm-text">
+          任务正在后台全速运行。<br />
+          请不要关闭页面，完成后会自动显示详细报告。
+        </div>
+      </div>
+    </div>
+
+    <div
+      th:if="${success != null and success.contains('缁存姢鎬荤粨')}"
+      id="redirect-report-modal"
+      class="confirm-modal-overlay"
+      style="display: flex; opacity: 1"
+    >
+      <div class="confirm-modal modal-wide">
+        <div class="confirm-icon">📋</div>
+        <div class="confirm-title">维护任务完成</div>
+        <div class="log-scroll-box" th:text="${success}"></div>
+        <div class="confirm-actions">
+          <button
+            class="btn-modal btn-confirm"
+            onclick="this.closest('.confirm-modal-overlay').remove()"
+          >
+            关闭
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dynamic-log-modal" class="confirm-modal-overlay">
+      <div class="confirm-modal modal-wide">
+        <div class="confirm-icon">📋</div>
+        <div class="confirm-title" id="dynamic-log-title">日志报告</div>
+
+        <div id="dynamic-log-content" class="log-scroll-box">正在加载...</div>
+
+        <div class="confirm-actions">
+          <button
+            class="btn-modal btn-confirm"
+            onclick="closeDynamicLogModal()"
+          >
+            关闭
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- 1. 寮圭獥鍩虹閫昏緫 (纭繚鍏ㄥ眬鍙闂? ---
+      const confirmModal = document.getElementById("custom-confirm");
+      const loadingModal = document.getElementById("loading-modal");
+      const logModal = document.getElementById("dynamic-log-modal");
+
+      function showConfirmModal() {
+        confirmModal.classList.add("show");
+      }
+      function hideConfirmModal() {
+        confirmModal.classList.remove("show");
+      }
+
+      // 銆愬叧閿慨澶嶃€戝皢鍏抽棴鍑芥暟鎸傝浇鍒?window锛岀‘淇?HTML onclick 鑳芥壘鍒板畠
+      window.closeDynamicLogModal = function () {
+        if (logModal) logModal.classList.remove("show");
+      };
+
+      function submitMaintenance() {
+        hideConfirmModal();
+        loadingModal.classList.add("show");
+        setTimeout(
+          () => document.getElementById("maintenance-form").submit(),
+          300
+        );
+      }
+
+      // --- 2. 鏃ュ織鑾峰彇涓庢覆鏌撻€昏緫 ---
+      function fetchAndShowLog() {
+        // ... (涓婃鏃ュ織閫昏緫淇濇寔涓嶅彉) ...
+        document.getElementById("dynamic-log-title").textContent =
+          "上次维护报告";
+        const content = document.getElementById("dynamic-log-content");
+        content.innerHTML = "正在加载...";
+        logModal.classList.add("show");
+
+        fetch("/admin/maintenance-log")
+          .then((r) => r.text())
+          .then((t) => (content.textContent = t));
+      }
+
+      // 銆愭牳蹇冦€戣瀹㈤浄杈鹃€昏緫
+      function showAccessLogs() {
+        const title = document.getElementById("dynamic-log-title");
+        const content = document.getElementById("dynamic-log-content");
+
+        title.textContent = "访客雷达（全站记录）";
+        content.innerHTML =
+          '<div style="text-align:center;padding:40px;"><div class="spinner"></div><p style="color:#999;font-size:0.9rem">正在分析数据...</p></div>';
+        logModal.classList.add("show");
+
+        fetch("/admin/access-logs")
+          .then((r) => r.json())
+          .then((logs) => {
+            if (!logs || logs.length === 0) {
+              content.innerHTML =
+                '<div style="padding:30px;text-align:center;color:#999">暂无数据</div>';
+              return;
+            }
+            renderAccessLogs(content, logs);
+          })
+          .catch((err) => {
+            content.innerHTML = `<div class="message error">加载失败: ${err.message}</div>`;
+          });
+      }
+
+      // 娓叉煋寮曟搸
+      function renderAccessLogs(container, logs) {
+        const now = new Date().getTime();
+        const oneDay = 86400000;
+
+        // 1. 鍒嗘《
+        const groups = {
+          "24小时内": [],
+          "近 7 天": [],
+          "更早以前": [],
+        };
+
+        logs.forEach((log) => {
+          let tStr = log.visitTime;
+          if (tStr && tStr.indexOf("T") === -1) tStr = tStr.replace(" ", "T");
+          const time = new Date(tStr).getTime();
+          const diff = now - time;
+
+          if (diff < oneDay) groups["24小时内"].push(log);
+          else if (diff < 7 * oneDay) groups["近 7 天"].push(log);
+          else groups["更早以前"].push(log);
+        });
+
+        // 2. 鐢熸垚 HTML
+        let html = "";
+        for (const [label, groupLogs] of Object.entries(groups)) {
+          if (groupLogs.length === 0) continue;
+
+          // 浼氳瘽鑱氬悎
+          const sessions = aggregateSessions(groupLogs);
+
+          html += `
+                    <div class="time-header">
+                        <span>${label}</span>
+                        <span style="font-weight:400;color:#999">${sessions.length} 会话</span>
+                    </div>
+                `;
+
+          sessions.forEach((s) => {
+            const isMe = s.user === "admin" || s.user === "Yiliiii"; // 浣犵殑鐢ㄦ埛鍚?
+            const icon = s.device && s.device.includes("Mobile") ? "📱" : "🖥️";
+            const timeStr = formatTimeAgo(s.startTime);
+
+            html += `
+                    <details class="session-row">
+                        <summary class="session-summary">
+                            <div class="session-left">
+                                <div class="device-icon">${icon}</div>
+                                <div class="user-info">
+                                    <div class="user-name ${
+                                      isMe ? "admin" : ""
+                                    }">${s.user}</div>
+                                   <div class="user-meta">
+                                        <span>${s.ip}</span>
+                                        
+                                        ${
+                                          s.location
+                                            ? `<span style="background:#f0f0f0;padding:1px 6px;border-radius:4px;color:#666;">📍 ${s.location}</span>`
+                                            : ""
+                                        }
+                                        
+                                        <span>·</span>
+                                        <span>${
+                                          s.device.split(" ")[1] || "Unknown"
+                                        }</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="session-right">
+                                <span class="time-ago">${timeStr}</span>
+                                <span class="action-badge">${
+                                  s.logs.length
+                                } 操作</span>
+                            </div>
+                        </summary>
+                        <div class="action-list">
+                    `;
+
+            s.logs.forEach((l) => {
+              const t = l.visitTime.split(" ")[1] || ""; // HH:mm:ss
+              html += `
+                            <div class="action-item">
+                                <span class="method-tag method-${l.method}">${l.method}</span>
+                                <span class="action-url" title="${l.url}">${l.url}</span>
+                                <span class="action-time">${t}</span>
+                            </div>
+                        `;
+            });
+            html += `</div></details>`;
+          });
+        }
+        container.innerHTML = html;
+      }
+
+      // 绠楁硶锛氳仛鍚堜細璇?
+      function aggregateSessions(logs) {
+        const sessions = [];
+        let curr = null;
+        logs.forEach((log) => {
+          let tStr = log.visitTime;
+          if (tStr.indexOf("T") === -1) tStr = tStr.replace(" ", "T");
+          const time = new Date(tStr).getTime();
+
+          if (
+            curr &&
+            curr.user === log.username &&
+            curr.ip === log.ipAddress &&
+            Math.abs(curr.lastTime - time) < 1800000
+          ) {
+            curr.logs.push(log);
+            curr.lastTime = time;
+          } else {
+            curr = {
+              user: log.username,
+              ip: log.ipAddress,
+              // 銆愭柊澧炪€戜紭鍏堝彇绗竴鏉℃湁浣嶇疆淇℃伅鐨勮褰?
+              location: log.location || "",
+              device: log.userAgent || "",
+              startTime: time,
+              lastTime: time,
+              logs: [log],
+            };
+            sessions.push(curr);
+          }
+        });
+        return sessions;
+      }
+
+      function formatTimeAgo(time) {
+        const diff = (new Date().getTime() - time) / 1000;
+        if (diff < 60) return "刚刚";
+        if (diff < 3600) return Math.floor(diff / 60) + " 分钟前";
+        if (diff < 86400) return Math.floor(diff / 3600) + " 小时前";
+        return new Date(time).toLocaleDateString();
+      }
+
+      // 鐐瑰嚮閬僵鍏抽棴 (閫氱敤)
+      document.querySelectorAll(".confirm-modal-overlay").forEach((m) => {
+        m.addEventListener("click", (e) => {
+          if (e.target === m) m.classList.remove("show");
+        });
+      });
+    </script>
+  </body>
+</html>
+

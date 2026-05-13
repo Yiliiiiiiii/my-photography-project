@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>访客雷达</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        --bg-body: #f3ede3;
+        --bg-card: rgba(255, 251, 245, 0.92);
+        --text-primary: #2b221c;
+        --text-secondary: #7a6a5d;
+        --accent-color: #b5653b;
+        --border-color: rgba(113, 84, 58, 0.10);
+      }
+      body {
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 20px;
+        line-height: 1.5;
+      }
+      .container { max-width: 800px; margin: 0 auto; }
+      .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 0 10px; }
+      .page-title { font-size: 28px; font-weight: 700; margin: 0; font-family: "Songti SC", "STSong", "SimSun", serif; letter-spacing: 0.08em; }
+      .header-actions { display: flex; gap: 12px; }
+      .btn {
+        background: var(--bg-card); color: var(--text-primary); padding: 8px 16px; border-radius: 999px;
+        text-decoration: none; font-size: 14px; font-weight: 600; border: 1px solid var(--border-color);
+        display: flex; align-items: center; gap: 6px;
+      }
+      .stats-overview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+      .stat-card { background: var(--bg-card); padding: 20px; border-radius: 22px; text-align: center; box-shadow: 0 12px 28px rgba(70, 45, 28, 0.06); }
+      .stat-value { font-size: 24px; font-weight: 700; color: var(--accent-color); margin-bottom: 4px; }
+      .stat-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+      .time-header { position: sticky; top: 20px; z-index: 10; background: rgba(243, 237, 227, 0.9); padding: 15px 10px; margin-top: 20px; font-weight: 600; color: var(--text-secondary); display: flex; justify-content: space-between; border-radius: 12px; margin-bottom: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+      .session-card { background: var(--bg-card); border-radius: 20px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(70, 45, 28, 0.04); }
+      summary.session-header { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; list-style: none; outline: none; }
+      summary.session-header::-webkit-details-marker { display: none; }
+      .user-avatar { width: 42px; height: 42px; background: #efe7db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; flex-shrink: 0; color: #666; }
+      .user-info { flex-grow: 1; overflow: hidden; }
+      .user-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+      .badge-admin { background: rgba(217, 91, 77, 0.12); color: #d95b4d; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+      .meta-row { display: flex; gap: 12px; font-size: 13px; color: var(--text-secondary); align-items: center; }
+      .session-actions { text-align: right; min-width: 80px; }
+      .time-ago { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+      .action-count { background: rgba(181, 101, 59, 0.1); color: var(--accent-color); padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+      .log-details { background: rgba(113, 84, 58, 0.03); border-top: 1px solid var(--border-color); }
+      .log-row { padding: 12px 20px; border-bottom: 1px solid rgba(113, 84, 58, 0.05); display: flex; align-items: center; font-size: 13px; }
+      .method-badge { font-weight: 700; font-size: 11px; width: 45px; }
+      .GET { color: #34c759; } .POST { color: #d29b42; } .DELETE { color: #d95b4d; }
+      .log-url { flex-grow: 1; font-family: "SF Mono", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 15px; }
+      .log-time { color: var(--text-secondary); font-variant-numeric: tabular-nums; font-size: 12px; }
+      .loading { text-align: center; padding: 60px; color: var(--text-secondary); }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">访客雷达</h1>
+        <div class="header-actions">
+          <a href="/admin/users" class="btn">返回面板</a>
+          <a href="/gallery" class="btn">网站首页</a>
+        </div>
+      </div>
+      <div class="stats-overview" id="stats-panel" style="display: none">
+        <div class="stat-card"><div class="stat-value" id="stat-24h">0</div><div class="stat-label">24小时访客</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-pv">0</div><div class="stat-label">总请求数</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-locations">0</div><div class="stat-label">来源地区</div></div>
+      </div>
+      <div id="radar-content"><div class="loading">正在连接雷达卫星...</div></div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => loadData());
+      function loadData() {
+        const container = document.getElementById("radar-content");
+        fetch("/admin/access-logs").then((r) => r.json()).then((logs) => {
+          if (!logs || logs.length === 0) { container.innerHTML = '<div class="loading">暂无雷达数据</div>'; return; }
+          processAndRender(logs);
+        }).catch((e) => { container.innerHTML = `<div class="loading" style="color:#d95b4d">数据加载失败: ${e.message}</div>`; });
+      }
+      function processAndRender(logs) {
+        const container = document.getElementById("radar-content");
+        const now = new Date().getTime(); const oneDay = 86400000;
+        const groups = { "24小时内": [], "近 7 天": [], "更早以前": [] };
+        let active24h = new Set(); let locations = new Set();
+        logs.forEach((log) => {
+          let tStr = log.visitTime; if (tStr && tStr.indexOf("T") === -1) tStr = tStr.replace(" ", "T");
+          const time = new Date(tStr).getTime(); const diff = now - time;
+          if (diff < oneDay) { groups["24小时内"].push(log); active24h.add(log.username === "anonymousUser" ? log.ipAddress : log.username); }
+          else if (diff < 7 * oneDay) groups["近 7 天"].push(log); else groups["更早以前"].push(log);
+          if (log.location) locations.add(log.location);
+        });
+        document.getElementById("stat-24h").textContent = active24h.size;
+        document.getElementById("stat-pv").textContent = logs.length;
+        document.getElementById("stat-locations").textContent = locations.size || "-";
+        document.getElementById("stats-panel").style.display = "grid";
+        let html = "";
+        for (const [label, groupLogs] of Object.entries(groups)) {
+          if (groupLogs.length === 0) continue;
+          const sessions = aggregateSessions(groupLogs);
+          html += `<div class="time-header"><span>${label}</span><span>${sessions.length} 会话</span></div>`;
+          sessions.forEach((s) => { html += renderSessionCard(s); });
+        }
+        container.innerHTML = html;
+      }
+      function renderSessionCard(s) {
+        const isMe = s.user === "admin" || s.user === "Yiliiii";
+        const icon = s.device && s.device.includes("Mobile") ? "📱" : "🖥️";
+        let logRows = s.logs.map((l) => {
+          const t = l.visitTime.split(" ")[1] || "";
+          return `<div class="log-row"><span class="method-badge ${l.method}">${l.method}</span><span class="log-url" title="${l.url}">${l.url}</span><span class="log-time">${t}</span></div>`;
+        }).join("");
+        return `<details class="session-card"><summary class="session-header"><div style="display:flex;align-items:center;flex:1"><div class="user-avatar">${icon}</div><div class="user-info"><div class="user-name"><span style="${isMe ? "color:#d95b4d" : ""}">${s.user}</span>${isMe ? '<span class="badge-admin">管理员</span>' : ""}</div><div class="meta-row"><span>${s.location || "未知位置"}</span><span>${s.ip}</span></div></div></div><div class="session-actions"><span class="time-ago">${formatTimeAgo(s.startTime)}</span><span class="action-count">${s.logs.length} 操作</span></div></summary><div class="log-details">${logRows}</div></details>`;
+      }
+      function aggregateSessions(logs) {
+        const sessions = []; let curr = null;
+        logs.forEach((log) => { let tStr = log.visitTime; if (tStr.indexOf("T") === -1) tStr = tStr.replace(" ", "T"); const time = new Date(tStr).getTime();
+          if (curr && curr.user === log.username && curr.ip === log.ipAddress && Math.abs(curr.lastTime - time) < 1800000) { curr.logs.push(log); curr.lastTime = time; }
+          else { curr = { user: log.username, ip: log.ipAddress, location: log.location || "", device: log.userAgent || "", startTime: time, lastTime: time, logs: [log] }; sessions.push(curr); }
+        }); return sessions;
+      }
+      function formatTimeAgo(time) {
+        const diff = (new Date().getTime() - time) / 1000;
+        if (diff < 60) return "刚刚"; if (diff < 3600) return Math.floor(diff / 60) + "m"; if (diff < 86400) return Math.floor(diff / 3600) + "h";
+        return new Date(time).getMonth() + 1 + "-" + new Date(time).getDate();
+      }
+    </script>
+  </body>
+</html>

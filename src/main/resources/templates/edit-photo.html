@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>修改作品信息</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 40px 20px;
+        background:
+          radial-gradient(circle at top left, rgba(181, 101, 59, 0.18), transparent 28%),
+          radial-gradient(circle at 82% 22%, rgba(120, 142, 118, 0.12), transparent 24%),
+          linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
+        color: #2b221c;
+      }
+
+      h2 {
+        font-size: 2.3rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 28px;
+        font-family: "Songti SC", "STSong", "SimSun", serif;
+        letter-spacing: 0.08em;
+      }
+
+      form {
+        max-width: 620px;
+        margin: 0 auto;
+        padding: 32px;
+        background: rgba(255, 251, 245, 0.88);
+        border-radius: 28px;
+        box-shadow: 0 24px 60px rgba(70, 45, 28, 0.10);
+        border: 1px solid rgba(113, 84, 58, 0.10);
+        backdrop-filter: blur(12px);
+      }
+
+      .form-row {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #5f5045;
+      }
+
+      input[type="text"],
+      input[type="file"],
+      input[type="datetime-local"],
+      textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid rgba(113, 84, 58, 0.12);
+        border-radius: 16px;
+        font-size: 1rem;
+        box-sizing: border-box;
+        font-family: inherit;
+        background: rgba(255, 255, 255, 0.55);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 110px;
+      }
+
+      input:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #b5653b;
+        box-shadow: 0 0 0 4px rgba(181, 101, 59, 0.12);
+        background: #fff;
+      }
+
+      .current-image {
+        max-width: 120px;
+        height: auto;
+        border-radius: 12px;
+        display: block;
+      }
+
+      .exif-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        background: rgba(255, 255, 255, 0.45);
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(113, 84, 58, 0.08);
+      }
+
+      .mini-label {
+        font-size: 0.86rem;
+        color: #7a6a5d;
+      }
+
+      button {
+        width: 100%;
+        background: #b5653b;
+        color: #fff;
+        padding: 14px 15px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 1.02rem;
+        font-weight: 700;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 24px auto 0;
+        color: #7a6a5d;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>修改作品信息</h2>
+
+    <form
+      action="#"
+      th:action="@{/update}"
+      th:object="${photo}"
+      method="POST"
+      id="editForm"
+      enctype="multipart/form-data"
+    >
+      <input type="hidden" th:field="*{id}" />
+
+      <div class="form-row">
+        <label>标题</label>
+        <input type="text" th:field="*{title}" required />
+      </div>
+
+      <div class="form-row">
+        <label>当前照片</label>
+        <img
+          th:src="${photo.webImageUrl != null ? photo.webImageUrl : (photo.thumbnailUrl != null ? photo.thumbnailUrl : photo.imageUrl)}"
+          alt="当前照片"
+          class="current-image"
+        />
+      </div>
+
+      <div class="form-row">
+        <label>上传新照片</label>
+        <input type="file" name="file" accept="image/*" />
+      </div>
+
+      <div class="form-row">
+        <label>简介</label>
+        <input type="text" th:field="*{descriptionShort}" />
+      </div>
+
+      <div class="form-row">
+        <label>详细描述</label>
+        <textarea th:field="*{descriptionLong}"></textarea>
+      </div>
+
+      <div class="form-row">
+        <label>拍摄时间</label>
+        <input
+          type="datetime-local"
+          name="takenAt"
+          step="1"
+          th:value="${photo.takenAt != null ? #temporals.format(photo.takenAt, 'yyyy-MM-dd''T''HH:mm:ss') : ''}"
+        />
+      </div>
+
+      <div class="form-row">
+        <label>EXIF 参数</label>
+        <div class="exif-grid">
+          <div>
+            <label class="mini-label">相机型号</label>
+            <input type="text" th:field="*{cameraModel}" placeholder="例如 Fujifilm X-T3" />
+          </div>
+          <div>
+            <label class="mini-label">焦段</label>
+            <input type="text" th:field="*{focalLength}" placeholder="例如 35 mm" />
+          </div>
+          <div>
+            <label class="mini-label">光圈</label>
+            <input type="text" th:field="*{aperture}" placeholder="例如 f/1.4" />
+          </div>
+          <div>
+            <label class="mini-label">快门速度</label>
+            <input type="text" th:field="*{shutterSpeed}" placeholder="例如 1/250 s" />
+          </div>
+          <div>
+            <label class="mini-label">ISO</label>
+            <input type="text" th:field="*{iso}" placeholder="例如 ISO 400" />
+          </div>
+          <div>
+            <label class="mini-label">厂商</label>
+            <input type="text" th:field="*{cameraMake}" placeholder="例如 Fujifilm" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>标签</label>
+        <input
+          type="text"
+          name="tagsString"
+          placeholder="例如：风光，人像，夜景"
+          th:value="${#strings.listJoin(photo.tags.![name], ', ')}"
+        />
+      </div>
+
+      <div class="form-row" style="margin-bottom: 0">
+        <button type="submit">更新作品</button>
+      </div>
+    </form>
+
+    <div style="text-align: center">
+      <a th:href="@{/gallery}" class="back-link">返回首页</a>
+    </div>
+  </body>
+</html>

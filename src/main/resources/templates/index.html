@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>朝花夕拾</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+
+    <script src="https://unpkg.com/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://unpkg.com/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    
+
+   
+
+
+    <div th:replace="~{fragments/header :: header-bar(activeTab='gallery')}"></div>
+
+    <div class="hero-header">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <div class="hero-avatar-wrapper">
+               <img sec:authorize="isAuthenticated()" th:src="${#authentication.principal.avatarUrl ?: '/images/default_avatar.png'}" class="hero-avatar">
+                <img sec:authorize="isAnonymous()" src="/images/default_avatar.png" class="hero-avatar">
+            </div>
+            <div class="hero-text">
+                <h2 class="hero-name">朝花夕拾</h2>
+                <p class="hero-bio">把拍下来的时间，慢慢整理成一册可回看的生活影像。</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="back-to-top" class="progress-wrap" title="回到顶部">
+    <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
+        <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" />
+    </svg>
+    <div class="progress-arrow">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+    </div>
+</div>
+
+    <div class="main-layout">
+        <div class="gallery-column" id="gallery-container">
+            <div th:if="${photoPage.empty}" class="empty-state">
+                <h2>这里还没有照片</h2><p sec:authorize="isAuthenticated()">去发布第一张照片吧。</p>
+            </div>
+            <th:block th:each="group : ${photoGroups}">
+                <div class="date-header-group" th:if="${!group.mergeWithPrevious}" th:data-iso-date="${group.isoDate}">
+                    <div class="date-separator">
+                        <span th:text="${group.displayDate}">Date</span>
+                        <div class="admin-actions-summary" sec:authorize="hasRole('ADMIN')"><button class="admin-icon-button edit-button">编辑总结</button></div>
+                    </div>
+                    <p class="daily-summary" th:if="${group.summary}" th:text="${group.summary}"></p>
+                    <form class="summary-edit-form" sec:authorize="hasRole('ADMIN')">
+                        <textarea name="content" th:text="${group.summary}" placeholder="写下今天的感受..."></textarea>
+                        <div class="form-actions"><button class="btn-save">保存</button><button type="button" class="btn-cancel">取消</button></div>
+                    </form>
+                </div>
+                <div class="gallery-day-grid" th:data-merge-group="${group.mergeWithPrevious}">
+                    <div class="photo-item" 
+     th:each="photo : ${group.photos}" 
+     th:id="'photo-' + ${photo.id}"  th:data-photo-id="${photo.id}"
+     th:style="...">
+                        <img th:src="${photo.thumbnailUrl ?: photo.imageUrl}" loading="lazy">
+                        <div class="photo-item-content">
+                            <div class="photo-item-header" style="display:flex; justify-content:space-between; align-items:start;">
+                                <h3 th:text="${photo.title}">Title</h3>
+                                <button class="like-button" sec:authorize="isAuthenticated()" th:data-photo-id="${photo.id}" th:classappend="${likedPhotoIds.contains(photo.id)}?'liked'">
+                                    <svg th:if="${!likedPhotoIds.contains(photo.id)}" class="like-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                    <svg th:if="${likedPhotoIds.contains(photo.id)}" class="like-icon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                    <span class="like-count" th:text="${photo.getLikeCount()}">0</span>
+                                </button>
+                            </div>
+                            <p th:text="${photo.descriptionShort}">Desc</p>
+                            <div class="palette-container" th:if="${photo.colorPalette}">
+                                <th:block th:each="c : ${#strings.arraySplit(photo.colorPalette, ',')}">
+                                    <div th:if="${#strings.length(c)>1}" class="palette-color" th:style="'background:'+${c}" th:data-q="${#strings.substring(c,1)}" onclick="window.location.href='/gallery?query='+this.getAttribute('data-q')"></div>
+                                </th:block>
+                            </div>
+                           <div class="exif-data">
+                                <span th:if="${photo.cameraMake != null and photo.cameraMake.trim() != ''}" th:text="${photo.cameraMake}">Fujifilm</span>
+                                <span th:if="${photo.cameraModel != null and photo.cameraModel.trim() != ''}" th:text="${photo.cameraModel}">X-T3</span>
+                                <span th:if="${photo.aperture != null and photo.aperture.trim() != ''}" th:text="${photo.aperture}">f/4.5</span>
+                                <span th:if="${photo.shutterSpeed != null and photo.shutterSpeed.trim() != ''}" th:text="${photo.shutterSpeed}">1/25 s</span>
+                                <span th:if="${photo.iso != null and photo.iso.trim() != ''}" th:text="${photo.iso}">ISO 320</span>
+                            </div>
+                            
+                            <div class="admin-actions" sec:authorize="hasRole('ADMIN')">
+                                <a th:href="@{/edit/{id}(id=${photo.id})}" class="admin-icon-button edit-button-icon" aria-label="编辑">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </a>
+                                <button class="admin-icon-button album-icon-button" th:onclick="'openQuickAlbumDialog(' + ${photo.id} + ')'" aria-label="加入相册">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+                                </button>
+                                <button class="admin-icon-button delete-button-icon ajax-delete-button" th:data-photo-id="${photo.id}" aria-label="删除">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+            <div id="loading-spinner" th:if="${!photoPage.last}" style="text-align:center;padding:30px;color:#999;">加载更多...</div>
+            <div id="gallery-end" style="display: none;">没有更多了</div>
+        </div>
+
+        <aside th:replace="~{fragments/sidebar :: dashboard}"></aside>
+    </div>
+
+    <div th:replace="~{fragments/modals :: all-modals}"></div>
+
+    <script th:inline="javascript">
+        // 閰嶇疆瀵硅薄锛氬皢 Thymeleaf 鏁版嵁浼犻€掔粰澶栭儴 JS
+        window.AppConfig = {
+            csrfToken: document.querySelector('meta[name="_csrf"]').content,
+            csrfHeader: document.querySelector('meta[name="_csrf_header"]').content,
+            likedPhotos: /*[[${likedPhotoIds}]]*/ [],
+            page: /*[[${photoPage.number}]]*/ 0,
+            isLast: /*[[${photoPage.last}]]*/ false,
+            query: /*[[${query}]]*/ null,
+            currUser: /*[[${#authentication.name}]]*/ 'anonymousUser'
+        };
+    </script>
+    <script th:src="@{/js/index.js(v=${#dates.createNow().getTime()})}"></script>
+</body>
+</html>

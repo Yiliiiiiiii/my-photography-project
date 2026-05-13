@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <body>
+    <div th:fragment="header-bar" class="header-bar">
+      <div class="header-left">
+        <a th:href="@{/gallery}" class="header-logo">朝花夕拾</a>
+
+        <nav class="header-nav">
+          <a
+            th:href="@{/gallery}"
+            class="nav-link"
+            th:classappend="${activeTab == 'gallery'} ? 'active'"
+            >日志</a
+          >
+          <a
+            th:href="@{/wall}"
+            class="nav-link"
+            th:classappend="${activeTab == 'wall'} ? 'active'"
+            >照片墙</a
+          >
+          <div class="nav-pill"></div>
+        </nav>
+      </div>
+
+      <form th:action="@{/gallery}" method="GET" class="search-form">
+        <input
+          type="search"
+          name="query"
+          class="search-input"
+          placeholder="搜索主题、颜色..."
+          th:value="${query}"
+        />
+      </form>
+
+      <div class="auth-buttons">
+        <button
+          id="theme-toggle"
+          class="edit-mode-button nav-btn magnetic-btn"
+          title="切换深色/浅色模式"
+          style="width: 40px; padding: 0"
+        >
+          <svg
+            id="icon-moon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg
+            id="icon-sun"
+            style="display: none"
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+
+        <button
+          id="mobile-stats-btn"
+          class="nav-btn magnetic-btn"
+          style="
+            display: none;
+            background: none;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            margin-right: 5px;
+          "
+        >
+          统计
+        </button>
+
+        <a
+          th:href="@{/add}"
+          class="add-link nav-btn magnetic-btn"
+          sec:authorize="hasRole('ADMIN')"
+          >发布</a
+        >
+
+        <div
+          sec:authorize="isAuthenticated() and authentication.principal.id == 1"
+        >
+          <button
+            id="toggle-edit-mode"
+            class="edit-mode-button nav-btn magnetic-btn"
+          >
+            <span id="edit-button-text">编辑</span>
+          </button>
+        </div>
+
+        <a
+          th:href="@{/albums}"
+          class="edit-mode-button nav-btn magnetic-btn"
+          sec:authorize="hasRole('ADMIN')"
+          >相册</a
+        >
+
+        <a th:href="@{/map}" class="edit-mode-button nav-btn magnetic-btn"
+          >地图</a
+        >
+
+        <a
+          th:href="@{/notifications}"
+          class="edit-mode-button nav-btn magnetic-btn"
+          sec:authorize="isAuthenticated()"
+          >消息</a
+        >
+
+        <a
+          th:href="@{/admin/users}"
+          class="edit-mode-button nav-btn magnetic-btn"
+          sec:authorize="isAuthenticated() and authentication.principal.id == 1"
+          >管理</a
+        >
+
+        <a
+          th:href="@{/admin/batch-upload}"
+          class="edit-mode-button nav-btn magnetic-btn"
+          sec:authorize="hasRole('ADMIN')"
+          >导入</a
+        >
+
+        <a
+          th:href="@{/profile}"
+          class="edit-mode-button nav-btn magnetic-btn"
+          sec:authorize="isAuthenticated()"
+          >我的</a
+        >
+
+        <form
+          th:action="@{/logout}"
+          method="POST"
+          sec:authorize="isAuthenticated()"
+          style="margin: 0"
+        >
+          <button class="logout-button nav-btn magnetic-btn">退出</button>
+        </form>
+
+        <a
+          th:href="@{/login}"
+          class="edit-mode-button nav-btn magnetic-btn"
+          sec:authorize="isAnonymous()"
+          >登录</a
+        >
+      </div>
+    </div>
+  </body>
+</html>
+

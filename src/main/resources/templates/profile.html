@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>个人资料</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        color: #2b221c;
+        background:
+          radial-gradient(circle at top left, rgba(181, 101, 59, 0.18), transparent 28%),
+          radial-gradient(circle at 82% 22%, rgba(120, 142, 118, 0.12), transparent 24%),
+          linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
+        background-attachment: fixed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        box-sizing: border-box;
+      }
+
+      .profile-card {
+        width: 100%;
+        max-width: 560px;
+        padding: 42px;
+        background: rgba(255, 251, 245, 0.78);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 28px;
+        box-shadow: 0 24px 60px rgba(70, 45, 28, 0.12);
+        border: 1px solid rgba(113, 84, 58, 0.10);
+      }
+
+      .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .avatar-preview {
+        width: 108px;
+        height: 108px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 16px;
+        box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.55),
+          0 18px 32px rgba(70, 45, 28, 0.12);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        font-family: "Songti SC", "STSong", "SimSun", serif;
+        letter-spacing: 0.08em;
+      }
+
+      .role-badge {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 5px 14px;
+        background: rgba(181, 101, 59, 0.12);
+        color: #b5653b;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .form-section {
+        margin-top: 28px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(113, 84, 58, 0.10);
+      }
+
+      h4 {
+        margin: 0 0 15px 0;
+        font-size: 1rem;
+        color: #5f5045;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 0.92rem;
+        padding-left: 4px;
+      }
+
+      input[type="text"],
+      input[type="password"],
+      input[type="file"] {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid rgba(113, 84, 58, 0.12);
+        border-radius: 16px;
+        font-size: 0.96rem;
+        box-sizing: border-box;
+        background: rgba(255, 255, 255, 0.55);
+        transition: all 0.2s;
+        outline: none;
+      }
+
+      input:focus {
+        background: #fff;
+        border-color: #b5653b;
+        box-shadow: 0 0 0 4px rgba(181, 101, 59, 0.12);
+      }
+
+      input[type="file"] {
+        padding: 8px;
+        color: #6f5f53;
+      }
+
+      input[type="file"]::file-selector-button {
+        margin-right: 15px;
+        border: none;
+        background: #fff;
+        padding: 7px 16px;
+        border-radius: 999px;
+        color: #b5653b;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(70, 45, 28, 0.08);
+      }
+
+      .btn {
+        width: 100%;
+        padding: 13px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.96rem;
+      }
+
+      .btn-primary {
+        background: #b5653b;
+        color: #fff;
+      }
+
+      .btn-warning {
+        background: #d29b42;
+        color: #fff;
+      }
+
+      .btn-danger {
+        background: #d95b4d;
+        color: #fff;
+      }
+
+      .message {
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      .message.success {
+        background: rgba(52, 199, 89, 0.15);
+        color: #1d822d;
+      }
+
+      .message.error {
+        background: rgba(255, 59, 48, 0.15);
+        color: #d10000;
+      }
+
+      .footer-links {
+        margin-top: 30px;
+        text-align: center;
+      }
+
+      .btn-back {
+        text-decoration: none;
+        color: #7a6a5d;
+        font-size: 0.94rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="profile-card">
+      <div th:if="${success}" class="message success" th:text="${success}"></div>
+      <div th:if="${error}" class="message error" th:text="${error}"></div>
+
+      <div class="profile-header">
+        <img
+          th:src="${user.avatarUrl != null ? user.avatarUrl : '/images/default_avatar.png'}"
+          class="avatar-preview"
+        />
+        <h2 th:text="${user.username}">Username</h2>
+        <span
+          class="role-badge"
+          th:text="${user.hasRole('ROLE_ADMIN') ? '管理员' : '摄影访客'}"
+          >Role</span
+        >
+      </div>
+
+      <form
+        th:action="@{/profile/avatar-upload}"
+        method="POST"
+        enctype="multipart/form-data"
+        class="form-section"
+      >
+        <h4>更换头像</h4>
+        <div class="form-group">
+          <input
+            type="file"
+            name="avatarFile"
+            accept="image/png, image/jpeg"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">上传新头像</button>
+      </form>
+
+      <form
+        th:action="@{/profile/update-username}"
+        method="POST"
+        class="form-section"
+        onsubmit="return confirm('确定要更改用户名吗？修改后需要重新登录。');"
+      >
+        <h4>账户设置</h4>
+        <div class="form-group">
+          <label>新用户名</label>
+          <input
+            type="text"
+            name="newUsername"
+            th:value="${user.username}"
+            required
+            placeholder="设置新的用户名"
+          />
+        </div>
+        <button type="submit" class="btn btn-warning">更新用户名</button>
+      </form>
+
+      <form
+        th:action="@{/profile/update-password}"
+        method="POST"
+        class="form-section"
+        onsubmit="return confirm('确定要修改密码吗？');"
+      >
+        <h4>安全设置</h4>
+        <div class="form-group">
+          <label>旧密码</label>
+          <input
+            type="password"
+            name="oldPassword"
+            required
+            placeholder="验证当前密码"
+          />
+        </div>
+        <div class="form-group">
+          <label>新密码</label>
+          <input
+            type="password"
+            name="newPassword"
+            required
+            placeholder="设置新密码"
+          />
+        </div>
+        <button type="submit" class="btn btn-danger">重置密码</button>
+      </form>
+
+      <div class="footer-links">
+        <a th:href="@{/gallery}" class="btn-back">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            style="margin-right: 5px"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          返回首页
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

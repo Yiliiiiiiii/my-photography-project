@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>批量导入作品</title>
+    <style>
+      body { font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%); padding: 40px; color: #2b221c; }
+      .container { max-width: 640px; margin: 0 auto; background: rgba(255, 251, 245, 0.88); padding: 32px; border-radius: 28px; box-shadow: 0 24px 60px rgba(70,45,28,0.10); border: 1px solid rgba(113,84,58,0.10); }
+      h2 { font-size: 2rem; font-weight: 700; font-family: "Songti SC", "STSong", "SimSun", serif; letter-spacing: 0.08em; }
+      .form-group { margin-bottom: 20px; }
+      .form-group label { display: block; font-weight: 600; margin-bottom: 10px; font-size: 1rem; color: #5f5045; }
+      .checkbox-label { display: block; margin-bottom: 10px; font-size: 1rem; }
+      .checkbox-label input { margin-right: 8px; }
+      input[type="file"] { width: 100%; padding: 8px; border: 1px solid rgba(113,84,58,0.12); border-radius: 16px; font-size: 1rem; box-sizing: border-box; color: #555; }
+      input[type="file"]::file-selector-button { margin-right: 15px; border: none; background: #fff; padding: 8px 20px; border-radius: 999px; color: #b5653b; font-weight: 700; cursor: pointer; }
+      .btn-primary { padding: 13px 20px; border: none; border-radius: 999px; cursor: pointer; font-weight: 700; background: #b5653b; color: #fff; font-size: 1rem; width: 100%; }
+      .message { padding: 10px; border-radius: 12px; margin-bottom: 15px; }
+      .message.success { background: rgba(52, 199, 89, 0.15); color: #155724; }
+      .message.error { background: rgba(255, 59, 48, 0.12); color: #721c24; }
+      .footer-links { margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(113,84,58,0.10); display: flex; gap: 12px; flex-wrap: wrap; }
+      .btn-secondary { display: inline-flex; align-items: center; justify-content: center; padding: 10px 18px; background-color: rgba(255, 251, 245, 0.92); color: #5f5045; border-radius: 999px; text-decoration: none; font-size: 0.95rem; font-weight: 600; border: 1px solid rgba(113,84,58,0.10); }
+      .btn-secondary svg { width: 16px; height: 16px; margin-right: 6px; stroke-width: 2.5; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>批量导入新作品</h2>
+      <div th:if="${success}" class="message success" th:text="${success}"></div>
+      <div th:if="${error}" class="message error" th:text="${error}"></div>
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(113,84,58,0.10)" />
+      <form th:action="@{/admin/batch-upload}" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="files">1. 选择照片</label>
+          <input type="file" id="files" name="files" multiple required accept="image/jpeg, image/png, image/webp" />
+        </div>
+        <div class="form-group">
+          <label>2. AI 选项</label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="generateAi" value="true" />
+            <strong>启用 AI 生成作品名称和简介</strong>
+            <p style="font-size: 0.9rem; color: #6f5f53; margin-top: 5px">
+              开启后导入速度会稍慢；未勾选时默认使用文件名作为标题。
+            </p>
+          </label>
+        </div>
+        <button type="submit" class="btn-primary">开始后台导入</button>
+      </form>
+      <div class="footer-links">
+        <a th:href="@{/gallery}" class="btn-secondary">返回画廊</a>
+        <a th:href="@{/admin/users}" class="btn-secondary">返回用户管理</a>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!build/
+!build/icon.ico
+!build/icon.png
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Desktop packaging ###
+node_modules/
+dist/
+desktop-runtime/
+*.log
+build_log_utf8.txt
+compile_log_revert.txt
+
+### Local app secrets / machine-specific config ###
+src/main/resources/application-local.properties
+src/main/resources/application-*.local.properties
+
+### Runtime uploads / local data ###
+src/main/resources/static/uploads/
+migration-test-data/
+migration-diagnose-data/
+*.zip

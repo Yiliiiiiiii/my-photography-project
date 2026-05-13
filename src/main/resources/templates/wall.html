@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html
+  lang="zh"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>照片墙 - 朝花夕拾</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+    <style>
+      :root {
+        --bg-body: #f3ede3;
+        --bg-card: rgba(255, 251, 245, 0.9);
+        --text-primary: #2b221c;
+        --text-secondary: #7a6a5d;
+        --bg-header: rgba(246, 239, 229, 0.82);
+        --shadow-card: 0 18px 40px rgba(70, 45, 28, 0.08);
+        --link-blue: #b5653b;
+      }
+
+      body {
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        margin: 0;
+        background: linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
+        color: var(--text-primary);
+      }
+
+      .header-bar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        padding: 16px 20px;
+        background-color: var(--bg-header);
+        backdrop-filter: blur(20px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(113, 84, 58, 0.08);
+      }
+
+      .header-bar h1 {
+        font-family: "Songti SC", "STSong", "SimSun", serif;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .nav-link {
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-weight: 700;
+        font-size: 1rem;
+        margin-right: 18px;
+      }
+
+      .nav-link.active,
+      .nav-link:hover {
+        color: var(--link-blue);
+      }
+
+      .wall-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 24px 10px;
+      }
+
+      .grid-sizer,
+      .grid-item {
+        width: 25%;
+        padding: 10px;
+        box-sizing: border-box;
+        opacity: 0;
+        transform: translateY(40px) scale(0.97);
+        transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+      }
+
+      .grid-item.reveal {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      @media (max-width: 1200px) {
+        .grid-sizer,
+        .grid-item {
+          width: 33.333%;
+        }
+      }
+
+      @media (max-width: 800px) {
+        .grid-sizer,
+        .grid-item {
+          width: 50%;
+        }
+      }
+
+      @media (max-width: 500px) {
+        .grid-sizer,
+        .grid-item {
+          width: 100%;
+        }
+      }
+
+      .grid-item-content {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow-card);
+        transition: transform 0.3s ease;
+        cursor: pointer;
+        height: 100%;
+        border: 1px solid rgba(113, 84, 58, 0.08);
+      }
+
+      .grid-item-content:hover {
+        transform: translateY(-5px);
+      }
+
+      .grid-item img {
+        width: 100%;
+        display: block;
+        height: auto;
+      }
+
+      .info-overlay {
+        padding: 16px;
+      }
+
+      .photo-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+      }
+
+      .photo-desc {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-bar">
+      <div style="display: flex; align-items: center">
+        <h1 style="margin: 0 20px 0 0; font-size: 1.5rem">朝花夕拾</h1>
+        <nav style="display: flex">
+          <a th:href="@{/gallery}" class="nav-link">日志</a>
+          <a th:href="@{/wall}" class="nav-link active">照片墙</a>
+        </nav>
+      </div>
+
+      <div style="display: flex; gap: 10px">
+        <a
+          th:href="@{/add}"
+          sec:authorize="hasRole('ADMIN')"
+          style="background: var(--link-blue); color: #fff; padding: 8px 15px; border-radius: 999px; text-decoration: none; font-size: 0.9rem; font-weight: 700;"
+          >发布</a
+        >
+      </div>
+    </div>
+
+    <div class="wall-container">
+      <div class="grid" id="masonry-grid">
+        <div class="grid-sizer"></div>
+
+        <div class="grid-item" th:each="photo : ${photoPage.content}">
+          <div
+            class="grid-item-content"
+            th:data-href="@{/gallery(query=${photo.title})}"
+            onclick="window.location.href=this.getAttribute('data-href')"
+          >
+            <img th:src="${photo.webImageUrl ?: photo.imageUrl}" loading="lazy" />
+            <div class="info-overlay">
+              <h3 class="photo-title" th:text="${photo.title}">Title</h3>
+              <p
+                class="photo-desc"
+                th:if="${photo.descriptionLong}"
+                th:text="${#strings.abbreviate(photo.descriptionLong, 50)}"
+              >
+                Desc
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="wall-loader" style="text-align: center; margin: 40px 0; color: #8c7b6d; display: none">
+        <svg
+          style="animation: spin 1s linear infinite; width: 24px; height: 24px; vertical-align: middle; margin-right: 8px"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
+        <span>正在加载...</span>
+      </div>
+      <div id="wall-end" style="text-align: center; margin: 60px 0; color: #b5a79a; display: none; font-size: 0.9rem">
+        已经到底了
+      </div>
+    </div>
+
+    <script th:inline="javascript">
+      var page = /*[[${photoPage.number}]]*/ 0;
+      var isLast = /*[[${photoPage.last}]]*/ false;
+      var isLoading = false;
+
+      var $grid = $("#masonry-grid").masonry({
+        itemSelector: ".grid-item",
+        columnWidth: ".grid-sizer",
+        percentPosition: true,
+        transitionDuration: 0,
+      });
+
+      function animateItems($items) {
+        $items.each(function (index, element) {
+          setTimeout(function () {
+            $(element).addClass("reveal");
+          }, index * 50);
+        });
+      }
+
+      $grid.imagesLoaded().progress(function () {
+        $grid.masonry("layout");
+      }).always(function () {
+        animateItems($(".grid-item"));
+      });
+
+      $(window).scroll(function () {
+        if (isLoading || isLast) return;
+        if ($(window).scrollTop() + $(window).height() > $(document).height() - 300) {
+          loadNextPage();
+        }
+      });
+
+      function loadNextPage() {
+        isLoading = true;
+        $("#wall-loader").show();
+
+        var nextPage = page + 1;
+
+        $.get("/wall?page=" + nextPage, function (data) {
+          var $responseHtml = $($.parseHTML(data));
+          var $newItems = $responseHtml.find(".grid-item");
+
+          if ($newItems.length > 0) {
+            $("#masonry-grid").append($newItems);
+            $newItems.imagesLoaded().always(function () {
+              $grid.masonry("appended", $newItems);
+              animateItems($newItems);
+              page++;
+              isLoading = false;
+              $("#wall-loader").hide();
+            });
+          } else {
+            isLast = true;
+            isLoading = false;
+            $("#wall-loader").hide();
+            $("#wall-end").show();
+          }
+        }).fail(function () {
+          console.error("加载失败");
+          isLoading = false;
+          $("#wall-loader").hide();
+        });
+      }
+
+      if (isLast) {
+        $("#wall-end").show();
+      }
+    </script>
+  </body>
+</html>

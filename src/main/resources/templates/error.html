@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>这里有风 - 朝花夕拾</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        --text-primary: #fff8f2;
+        --text-secondary: rgba(255, 248, 242, 0.82);
+        --btn-bg: #b5653b;
+        --btn-hover: #9f5834;
+      }
+      body {
+        margin: 0; padding: 0; height: 100vh;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background-color: #1a1a1a;
+        background-image: url("https://images.unsplash.com/photo-1485594050903-8e8ee5322318?q=80&w=2070&auto=format&fit=crop");
+        background-size: cover; background-position: center;
+        display: flex; justify-content: center; align-items: center; overflow: hidden;
+      }
+      .overlay { position: absolute; inset: 0; background: rgba(25, 18, 14, 0.48); backdrop-filter: blur(5px); }
+      .error-card {
+        position: relative; z-index: 10; background: rgba(255, 251, 245, 0.12); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2); padding: 60px 40px; border-radius: 28px; text-align: center;
+        max-width: 520px; width: 90%; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+      h1 { font-size: 6rem; margin: 0; font-weight: 200; letter-spacing: -2px; color: var(--text-primary); line-height: 1; }
+      h2 { font-size: 1.5rem; margin: 20px 0 10px; font-weight: 600; color: var(--text-primary); }
+      p { font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); margin-bottom: 40px; }
+      .home-btn {
+        display: inline-block; padding: 12px 30px; background-color: var(--btn-bg); color: #fff; text-decoration: none;
+        border-radius: 999px; font-weight: 700; font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="overlay"></div>
+    <div class="error-card">
+      <h1 th:text="${status} ?: 'Oops'">404</h1>
+      <h2 th:switch="${status}">
+        <span th:case="404">迷失在雾里</span>
+        <span th:case="500">快门卡住了</span>
+        <span th:case="403">没有通行证</span>
+        <span th:case="*">出了点小状况</span>
+      </h2>
+      <p>
+        <span th:if="${errorMessage}" th:text="${errorMessage}"></span>
+        <span th:unless="${errorMessage}" th:switch="${status}">
+          <span th:case="404">你寻找的画面已经消散在风里，这里只留下空旷的回声。</span>
+          <span th:case="500">服务器在冲洗底片时遇到了一点麻烦，请稍后再来查看成片。</span>
+          <span th:case="*">未知的错误发生了，但这也许是另一个故事的开头。</span>
+        </span>
+      </p>
+      <a th:href="@{/gallery}" class="home-btn">返回画廊</a>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "name": "my-photography-desktop",
+  "version": "0.0.1",
+  "description": "朝花夕拾摄影日志桌面版",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "desktop:jar": "mvn clean package -DskipTests",
+    "desktop:dev": "npm run desktop:jar && electron .",
+    "desktop:prepare": "powershell -ExecutionPolicy Bypass -File scripts/prepare-desktop.ps1",
+    "desktop:dist": "npm run desktop:prepare && electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.yiliiii.myphotography",
+    "productName": "朝花夕拾",
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      },
+      {
+        "from": "target/my-photography-project-0.0.1-SNAPSHOT.jar",
+        "to": "backend/app.jar"
+      },
+      {
+        "from": "desktop-runtime",
+        "to": "runtime",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "朝花夕拾"
+    }
+  }
+}

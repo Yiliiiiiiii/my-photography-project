@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${photo.title} ?: '沉浸式浏览'">沉浸式浏览</title>
+    <style>
+        :root {
+            --paper: #f6f1e8;
+            --paper-strong: rgba(255, 251, 245, 0.92);
+            --ink: #2f261f;
+            --muted: #74675c;
+            --line: rgba(92, 66, 44, 0.14);
+            --accent: #b85c38;
+            --accent-rgb: 184, 92, 56;
+            --accent-soft: rgba(184, 92, 56, 0.10);
+            --accent-glow: rgba(184, 92, 56, 0.22);
+            --shadow: 0 24px 70px rgba(53, 33, 20, 0.16);
+            --panel-shadow: 0 18px 36px rgba(53, 33, 20, 0.08);
+            --grain-opacity: 0.05;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 10% 16%, var(--accent-glow), transparent 24%),
+                radial-gradient(circle at 88% 82%, rgba(120, 142, 118, 0.14), transparent 22%),
+                radial-gradient(circle at 50% 100%, rgba(var(--accent-rgb), 0.10), transparent 35%),
+                var(--paper);
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            overflow-x: hidden;
+            transition: background 320ms ease, color 220ms ease;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: -50%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: var(--grain-opacity);
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAA5OTkAAABERERmZmZ0dHR/f3+ZmZkU3V2vAAAACHRSTlMAMwAyyN3u7wcI3VwAAAB4SURBVDjLY2AYBaNgFIyCUTAKRsEoGAWjYBSMglEwCkbBKBgFo2AUjIJRMApGwSgYBaNgFIyCUTAKRsEoGAWjYBSMglEwCkbBKBgFo2AUjIJRMApGwSgAAK90A/1645K/AAAAAElFTkSuQmCC");
+            background-size: 120px 120px;
+        }
+
+        body.focus-mode {
+            background:
+                radial-gradient(circle at 50% 40%, rgba(var(--accent-rgb), 0.14), transparent 18%),
+                linear-gradient(180deg, #1d1713 0%, #120f0d 100%);
+            color: #f6eee5;
+        }
+
+        body.focus-mode .toolbar-chip {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(20px);
+        }
+
+        body.focus-mode .sidebar {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            transform: translateX(34px);
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(340px, 32vw);
+        }
+
+        body.focus-mode .toolbar {
+            gap: 0;
+        }
+
+        body.focus-mode .toolbar-button {
+            background: rgba(18, 15, 13, 0.48);
+            color: #f6eee5;
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.24);
+        }
+
+        body.focus-mode .photo-shell {
+            width: min(100%, 1180px);
+            background: rgba(255, 252, 247, 0.04);
+            border-color: rgba(255, 255, 255, 0.10);
+            box-shadow: 0 34px 110px rgba(0, 0, 0, 0.38);
+            padding: 10px;
+        }
+
+        body.focus-mode .page {
+            grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.72fr);
+        }
+
+        body.focus-mode .visual {
+            grid-column: 1 / 2;
+            width: 100%;
+            padding: 18px 24px;
+        }
+
+        body.focus-mode .photo-frame img {
+            max-height: calc(100vh - 28px);
+        }
+
+        body.focus-mode .focus-hint {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        body.focus-mode .visual::after {
+            opacity: 0.34;
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.72fr);
+            align-items: stretch;
+        }
+
+        .toolbar {
+            position: fixed;
+            top: 22px;
+            right: 24px;
+            z-index: 4;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .toolbar-chip,
+        .toolbar-button {
+            border: 1px solid rgba(92, 66, 44, 0.12);
+            background: rgba(255, 251, 245, 0.72);
+            backdrop-filter: blur(14px);
+            color: var(--ink);
+            box-shadow: var(--panel-shadow);
+            transition: opacity 220ms ease, transform 220ms ease, background-color 180ms ease;
+        }
+
+        .toolbar-chip {
+            padding: 9px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .toolbar-button {
+            appearance: none;
+            border-radius: 999px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            position: relative;
+            z-index: 5;
+        }
+
+        .toolbar-button:hover {
+            background: rgba(255, 255, 255, 0.94);
+        }
+
+        .visual {
+            display: grid;
+            place-items: center;
+            padding: 42px;
+            position: relative;
+            overflow: hidden;
+            transition: padding 320ms ease;
+        }
+
+        .visual::after {
+            content: "";
+            position: absolute;
+            inset: 14% 12%;
+            background: radial-gradient(circle at center, rgba(var(--accent-rgb), 0.10), transparent 58%);
+            filter: blur(28px);
+            pointer-events: none;
+        }
+
+        .photo-shell {
+            width: min(100%, 1100px);
+            padding: 20px;
+            border-radius: 36px;
+            background: rgba(255, 252, 247, 0.74);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+            transform: translateY(28px) scale(0.98);
+            opacity: 0;
+            animation: visualReveal 820ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            transition: width 280ms ease, padding 280ms ease, background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+            transform-origin: center center;
+        }
+
+        .photo-frame {
+            position: relative;
+            overflow: hidden;
+            border-radius: 28px;
+            cursor: zoom-in;
+        }
+
+        .photo-frame img {
+            display: block;
+            width: 100%;
+            max-height: calc(100vh - 116px);
+            object-fit: contain;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.76), rgba(245,237,228,0.82));
+            transition: transform 420ms ease, max-height 280ms ease;
+            will-change: transform;
+        }
+
+        .focus-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            background:
+                linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 82%, rgba(0, 0, 0, 0.22)),
+                radial-gradient(circle at center, transparent 60%, rgba(0, 0, 0, 0.16) 100%);
+            opacity: 0;
+            transition: opacity 240ms ease;
+        }
+
+        body.focus-mode .focus-overlay {
+            opacity: 1;
+        }
+
+        .focus-hint {
+            position: absolute;
+            bottom: 26px;
+            left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            opacity: 0;
+            color: rgba(255, 246, 238, 0.88);
+            background: rgba(22, 18, 15, 0.48);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            backdrop-filter: blur(12px);
+            transition: opacity 220ms ease, transform 220ms ease;
+            pointer-events: none;
+        }
+
+        body.focus-mode.focus-hint-fade .focus-hint {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding: 34px 30px;
+            border-left: 1px solid var(--line);
+            background: var(--paper-strong);
+            backdrop-filter: blur(14px);
+            transition: opacity 220ms ease, transform 280ms ease, visibility 220ms ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .eyebrow,
+        h1,
+        .desc,
+        .panel,
+        .actions {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: contentReveal 620ms ease forwards;
+        }
+
+        .eyebrow { animation-delay: 120ms; }
+        h1 { animation-delay: 180ms; }
+        .desc { animation-delay: 240ms; }
+        .panel:nth-of-type(1) { animation-delay: 320ms; }
+        .panel:nth-of-type(2) { animation-delay: 400ms; }
+        .actions { animation-delay: 480ms; }
+
+        .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(30px, 3vw, 46px);
+            line-height: 1.04;
+            letter-spacing: -0.03em;
+            font-family: "Songti SC", "STSong", "SimSun", serif;
+        }
+
+        .desc {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.9;
+            font-size: 15px;
+        }
+
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.46);
+            padding: 18px;
+            box-shadow: 0 14px 34px rgba(53, 33, 20, 0.05);
+        }
+
+        .panel-title {
+            margin: 0 0 14px;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .meta-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: baseline;
+        }
+
+        .meta-row span {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .meta-row strong {
+            color: var(--ink);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            border: 1px solid rgba(92, 66, 44, 0.14);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: auto;
+            padding-top: 6px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            color: var(--ink);
+            background: transparent;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 160ms ease, background-color 160ms ease;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .button-primary {
+            background: var(--accent);
+            border-color: transparent;
+            color: #fff8f2;
+            box-shadow: 0 12px 24px rgba(var(--accent-rgb), 0.24);
+        }
+
+        .button-primary:hover {
+            background: color-mix(in srgb, var(--accent) 88%, #5e2c18 12%);
+        }
+
+        @keyframes visualReveal {
+            from {
+                opacity: 0;
+                transform: translateY(28px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes contentReveal {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1040px) {
+            .page {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                border-left: 0;
+                border-top: 1px solid var(--line);
+            }
+
+            .visual {
+                padding: 22px;
+            }
+
+            .toolbar {
+                top: 14px;
+                right: 14px;
+                left: 14px;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+            }
+
+            body.focus-mode .sidebar {
+                width: calc(100% - 32px);
+                right: 16px;
+                top: auto;
+                bottom: 16px;
+                border-left: 0;
+                border-top: 1px solid var(--line);
+                border-radius: 24px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .toolbar-chip {
+                display: none;
+            }
+
+            .photo-shell {
+                padding: 14px;
+            }
+
+            .photo-frame img {
+                max-height: calc(100vh - 160px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-chip" id="color-chip">主色氛围已同步</div>
+        <button type="button" class="toolbar-button" id="focus-toggle">专注模式</button>
+    </div>
+    <div class="focus-overlay" aria-hidden="true"></div>
+
+    <main class="page">
+        <section class="visual" id="visual-stage">
+            <div class="photo-shell">
+                <div class="photo-frame">
+                    <img id="immersive-photo"
+                        th:src="${photo.webImageUrl ?: photo.imageUrl}"
+                         th:alt="${photo.title}">
+                    <div class="focus-hint">点击照片、按 F 或 Esc 在专注模式中切换</div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="sidebar">
+            <div class="eyebrow">Immersive</div>
+            <h1 th:text="${photo.title}">照片标题</h1>
+            <p class="desc" th:text="${photo.descriptionLong ?: '暂时还没有更详细的介绍。'}">照片简介</p>
+
+            <section class="panel">
+                <h2 class="panel-title">拍摄信息</h2>
+                <div class="meta-grid">
+                    <div class="meta-row">
+                        <span>拍摄时间</span>
+                        <strong th:text="${photo.takenAt != null ? #temporals.format(photo.takenAt, 'yyyy-MM-dd HH:mm') : '未知'}">未知</strong>
+                    </div>
+                    <div class="meta-row">
+                        <span>相机</span>
+                        <strong th:text="${photo.cameraModel ?: (photo.cameraMake ?: '未知')}">未知</strong>
+                    </div>
+                    <div class="meta-row">
+                        <span>焦段</span>
+                        <strong th:text="${photo.focalLength ?: '未知'}">未知</strong>
+                    </div>
+                    <div class="meta-row">
+                        <span>参数</span>
+                        <strong th:text="${(photo.aperture ?: '--') + ' / ' + (photo.shutterSpeed ?: '--') + ' / ' + (photo.iso ?: '--')}">--</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" th:if="${photo.colorPalette}">
+                <h2 class="panel-title">色板</h2>
+                <div class="palette" id="palette-list">
+                    <span class="swatch"
+                          th:each="c : ${#strings.arraySplit(photo.colorPalette, ',')}"
+                          th:if="${#strings.length(c) > 1}"
+                          th:style="'background:' + ${c}"
+                          th:attr="data-color=${c}"></span>
+                </div>
+            </section>
+
+            <div class="actions">
+                <a class="button button-primary"
+                   th:href="@{/gallery#photo-{id}(id=${photo.id})}"
+                   onclick="if (document.referrer) { history.back(); return false; }">回到原位置</a>
+                <a class="button" href="/gallery">返回主画廊</a>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        const body = document.body;
+        const focusToggle = document.getElementById("focus-toggle");
+        const immersivePhoto = document.getElementById("immersive-photo");
+        const colorChip = document.getElementById("color-chip");
+        const visualStage = document.getElementById("visual-stage");
+        const photoFrame = document.querySelector(".photo-frame");
+        const swatches = Array.from(document.querySelectorAll(".swatch[data-color]"));
+        let hintTimer = null;
+
+        function hexToRgb(hex) {
+            const normalized = hex.replace("#", "").trim();
+            if (normalized.length !== 6) return null;
+            const int = Number.parseInt(normalized, 16);
+            if (Number.isNaN(int)) return null;
+            return {
+                r: (int >> 16) & 255,
+                g: (int >> 8) & 255,
+                b: int & 255,
+            };
+        }
+
+        function applyAccent(hex) {
+            const rgb = hexToRgb(hex);
+            if (!rgb) return;
+            document.documentElement.style.setProperty("--accent", hex);
+            document.documentElement.style.setProperty("--accent-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+            document.documentElement.style.setProperty("--accent-soft", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.10)`);
+            document.documentElement.style.setProperty("--accent-glow", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.22)`);
+            if (colorChip) {
+                colorChip.textContent = `主色氛围 ${hex.toUpperCase()}`;
+            }
+        }
+
+        function syncAccentFromPalette() {
+            if (!swatches.length) return;
+            const firstColor = swatches[0].dataset.color;
+            if (firstColor) applyAccent(firstColor);
+        }
+
+        function toggleFocusMode(forceValue) {
+            const nextState = typeof forceValue === "boolean" ? forceValue : !body.classList.contains("focus-mode");
+            body.classList.toggle("focus-mode", nextState);
+            focusToggle.textContent = nextState ? "退出专注" : "专注模式";
+            body.classList.remove("focus-hint-fade");
+
+            if (hintTimer) {
+                window.clearTimeout(hintTimer);
+                hintTimer = null;
+            }
+
+            if (nextState) {
+                hintTimer = window.setTimeout(() => {
+                    body.classList.add("focus-hint-fade");
+                }, 2200);
+            }
+        }
+
+        focusToggle?.addEventListener("click", () => toggleFocusMode());
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key.toLowerCase() === "f") {
+                toggleFocusMode();
+            }
+            if (event.key === "Escape") {
+                toggleFocusMode(false);
+            }
+        });
+
+        photoFrame?.addEventListener("click", () => {
+            toggleFocusMode();
+        });
+
+        visualStage?.addEventListener("mousemove", (event) => {
+            const rect = visualStage.getBoundingClientRect();
+            const focusFactor = body.classList.contains("focus-mode") ? 0.55 : 1;
+            const offsetX = ((event.clientX - rect.left) / rect.width - 0.5) * 14 * focusFactor;
+            const offsetY = ((event.clientY - rect.top) / rect.height - 0.5) * 10 * focusFactor;
+            const scale = body.classList.contains("focus-mode") ? 1.012 : 1.018;
+            immersivePhoto.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0) scale(${scale})`;
+        });
+
+        visualStage?.addEventListener("mouseleave", () => {
+            immersivePhoto.style.transform = "translate3d(0, 0, 0) scale(1)";
+        });
+
+        swatches.forEach((swatch) => {
+            swatch.addEventListener("click", () => {
+                const color = swatch.dataset.color;
+                if (color) applyAccent(color);
+            });
+        });
+
+        syncAccentFromPalette();
+    </script>
+</body>
+</html>

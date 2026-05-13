@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <aside th:fragment="dashboard" class="dashboard-column">
+      <div class="stats-card">
+        <h3>器材统计</h3>
+        <div class="chart-container"><canvas id="cameraChart"></canvas></div>
+      </div>
+      <div class="stats-card">
+        <h3>焦段偏好</h3>
+        <div class="chart-container"><canvas id="focalChart"></canvas></div>
+      </div>
+      <div class="stats-card">
+        <h3>色彩基因</h3>
+        <div class="chart-container"><canvas id="colorChart"></canvas></div>
+      </div>
+      <div class="stats-card">
+        <h3>拍摄时段</h3>
+        <div class="chart-container"><canvas id="hoursChart"></canvas></div>
+      </div>
+    </aside>
+  </body>
+</html>

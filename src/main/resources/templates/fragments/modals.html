@@ -1,0 +1,380 @@
+﻿<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <body>
+    <div th:fragment="all-modals">
+      <div id="notification-toast" class="toast-notification">
+        <div id="notification-msg"></div>
+        <div
+          onclick="hideToast()"
+          style="cursor: pointer; margin-left: 15px; color: #999"
+        >
+          关闭
+        </div>
+      </div>
+
+      <div id="photo-modal" class="modal-backdrop">
+        <button class="modal-close-bg" onclick="closeModal()"></button>
+        <button class="nav-arrow prev" onclick="navigateModal(-1)" title="上一张">
+          &#8249;
+        </button>
+        <button class="nav-arrow next" onclick="navigateModal(1)" title="下一张">
+          &#8250;
+        </button>
+        <div class="modal-content">
+          <div class="modal-image-container">
+            <img id="modal-img" src="" alt="照片详情" />
+          </div>
+          <div class="modal-details-container">
+            <button class="modal-close-button" onclick="closeModal()">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                width="24"
+                height="24"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <div class="modal-uploader-info">
+              <img
+                id="modal-uploader-avatar"
+                src="/images/default_avatar.png"
+                alt="uploader avatar"
+              />
+              <span id="modal-uploader-name"></span>
+            </div>
+            <p id="modal-taken-at"></p>
+            <div class="modal-header">
+              <h2 id="modal-title"></h2>
+              <div id="modal-like-button-placeholder"></div>
+              <button
+                id="modal-immersive-btn"
+                class="share-button"
+                title="沉浸式浏览"
+                onclick="enterImmersive(currentModalPhotoId)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M2 7h5"></path>
+                  <path d="M17 7h5"></path>
+                  <path d="M2 17h5"></path>
+                  <path d="M17 17h5"></path>
+                  <path d="M7 2v5"></path>
+                  <path d="M17 2v5"></path>
+                  <path d="M7 17v5"></path>
+                  <path d="M17 17v5"></path>
+                </svg>
+              </button>
+              <button
+                id="modal-share-btn"
+                class="share-button"
+                title="生成分享卡片"
+                onclick="generateShareCard()"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+              </button>
+            </div>
+            <p id="modal-description"></p>
+            <div sec:authorize="hasRole('ADMIN')">
+              <button id="modal-generate-ai-btn" class="ai-generate-button">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  width="16"
+                  height="16"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.393c-.845.07-1.178 1.16-.554 1.706l3.54 3.03-1.03 4.636c-.15.686.74 1.246 1.371.884L10 15.011l4.118 2.563c.63.362 1.52-.198 1.371-.884l-1.03-4.636 3.54-3.03c.623-.546.29-1.636-.554-1.706l-4.753-.393-1.83-4.401Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span>生成 AI 简介</span>
+              </button>
+            </div>
+            <div id="modal-tags-container" class="tags-container"></div>
+            <div id="modal-exif-data" class="exif-data"></div>
+            <a
+              id="modal-view-original-link"
+              href="#"
+              target="_blank"
+              class="view-original-link"
+              style="display: none"
+              >查看原图</a
+            >
+            <div id="add-to-album-container" class="album-action-area">
+              <div
+                id="modal-current-albums-list"
+                class="current-albums-list"
+              ></div>
+            </div>
+            <hr class="modal-divider" />
+            <div class="modal-comments-section">
+              <h4>评论</h4>
+              <div id="modal-comments-list"></div>
+              <div id="comment-input-wrapper" style="position: relative">
+                <div
+                  id="reply-status-bar"
+                  class="replying-to-bar"
+                  style="display: none"
+                >
+                  <span id="reply-target-text">回复 @User</span>
+                  <span class="cancel-reply-btn" onclick="cancelReply()"
+                    >取消</span
+                  >
+                </div>
+                <form id="modal-comment-form" sec:authorize="isAuthenticated()">
+                  <input
+                    type="hidden"
+                    id="comment-parent-id"
+                    name="parentId"
+                    value=""
+                  />
+                  <textarea
+                    id="modal-comment-content"
+                    name="content"
+                    placeholder="添加评论..."
+                    required
+                  ></textarea>
+                  <button type="submit">发布</button>
+                </form>
+                <div sec:authorize="isAnonymous()">
+                  <a th:href="@{/login}" class="comment-login-prompt"
+                    >请登录后发表评论</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="quick-album-modal"
+        class="quick-album-modal-overlay"
+        onclick="closeQuickAlbumDialog(event)"
+      >
+        <div class="quick-album-modal">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 10px;
+            "
+          >
+            <h3 style="margin: 0; font-size: 1.1rem">添加到相册</h3>
+            <button
+              onclick="closeQuickAlbumDialog(null, true)"
+              style="
+                background: none;
+                border: none;
+                font-size: 1.2rem;
+                cursor: pointer;
+                color: #999;
+              "
+            >
+              关闭
+            </button>
+          </div>
+          <div id="quick-album-list-container" class="quick-album-list"></div>
+        </div>
+      </div>
+
+      <div
+        id="delete-confirm-modal"
+        class="modal-backdrop"
+        style="z-index: 2000"
+      >
+        <div
+          class="modal-content"
+          style="
+            max-width: 320px;
+            padding: 30px;
+            text-align: center;
+            height: auto;
+          "
+        >
+          <div style="font-size: 3rem; margin-bottom: 15px">🗑️</div>
+          <h3 style="margin: 0 0 10px 0; color: var(--text-primary)">
+            确认删除？</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 25px">
+            此操作无法撤销，请谨慎执行。
+          </p>
+
+          <div style="display: flex; gap: 15px; justify-content: center">
+            <button
+              onclick="closeDeleteModal()"
+              style="
+                background: var(--bg-input);
+                color: var(--text-primary);
+                border: none;
+                padding: 10px 20px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 600;
+              "
+            >
+              取消
+            </button>
+            <button
+              id="btn-confirm-delete"
+              style="
+                background: #ff3b30;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 600;
+                box-shadow: 0 4px 10px rgba(255, 59, 48, 0.3);
+              "
+            >
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="share-card-modal" class="modal-backdrop" style="z-index: 3000">
+        <button class="modal-close-bg" onclick="closeShareModal()"></button>
+        <div class="modal-content share-card-content">
+          <h3>生成分享卡片</h3>
+          <div id="share-card-preview-container">
+            <div class="loading-spinner">生成中...</div>
+          </div>
+          <div class="share-actions">
+            <a
+              id="download-share-card-btn"
+              class="btn-save"
+              download="share-card.png"
+              >下载图片</a
+            >
+            <button class="btn-cancel" onclick="closeShareModal()">关闭</button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="share-card-template"
+        style="
+          position: fixed;
+          left: -9999px;
+          top: 0;
+          width: 375px;
+          background: #fff;
+          padding: 20px;
+          font-family: 'Times New Roman', serif;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        "
+      >
+        <div
+          style="
+            background: #fff;
+            padding: 15px 15px 40px 15px;
+            border: 1px solid #eee;
+            text-align: center;
+          "
+        >
+          <div
+            style="
+              width: 100%;
+              margin-bottom: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <img
+              id="share-template-img"
+              src=""
+              style="
+                width: 100%;
+                height: auto;
+                display: block;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+              "
+            />
+          </div>
+          <h2
+            id="share-template-title"
+            style="
+              font-size: 24px;
+              margin: 0 0 10px 0;
+              color: #333;
+              font-weight: normal;
+            "
+          ></h2>
+          <p
+            id="share-template-desc"
+            style="
+              font-size: 14px;
+              color: #666;
+              margin: 0 0 20px 0;
+              line-height: 1.6;
+              font-style: italic;
+            "
+          ></p>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              border-top: 1px solid #eee;
+              padding-top: 20px;
+            "
+          >
+            <div
+              style="
+                text-align: left;
+                font-size: 12px;
+                color: #999;
+                line-height: 1.5;
+              "
+            >
+              <div id="share-template-exif"></div>
+              <div style="margin-top: 5px">@鏈濊姳澶曟嬀</div>
+            </div>
+            <div id="share-qr-code"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

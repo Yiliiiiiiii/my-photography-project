@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>编辑用户权限</title>
+    <style>
+        body { font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%); padding: 40px; margin: 0; color: #2b221c; }
+        .container { max-width: 600px; margin: 0 auto; background: rgba(255, 251, 245, 0.88); padding: 32px; border-radius: 28px; box-shadow: 0 24px 60px rgba(70,45,28,0.10); border: 1px solid rgba(113,84,58,0.10); }
+        h2 { font-size: 2rem; font-weight: 700; font-family: "Songti SC", "STSong", "SimSun", serif; letter-spacing: 0.08em; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 10px; font-size: 1rem; color: #5f5045; }
+        .checkbox-label { display: block; margin-bottom: 10px; font-size: 1rem; }
+        .checkbox-label input { margin-right: 8px; }
+        .btn-primary { padding: 12px 20px; border: none; border-radius: 999px; cursor: pointer; font-weight: 700; background: #b5653b; color: #fff; }
+        .back-link { display: inline-block; margin-top: 20px; color: #7a6a5d; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>编辑用户权限</h2>
+        <h3 th:text="${'用户名：' + user.username}">用户名：admin</h3>
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(113,84,58,0.10);">
+        <form th:action="@{/admin/users/update}" method="POST">
+            <input type="hidden" name="userId" th:value="${user.id}" />
+            <div class="form-group">
+                <label>分配角色</label>
+                <div th:each="role : ${allRoles}">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="roleIds" th:value="${role.id}" th:checked="${user.hasRole(role.name)}" />
+                        <span th:text="${role.name == 'ROLE_ADMIN' ? '管理员' : '访客'}">ROLE_ADMIN</span>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">保存更改</button>
+        </form>
+        <a th:href="@{/admin/users}" class="back-link">&laquo; 返回用户列表</a>
+    </div>
+</body>
+</html>
