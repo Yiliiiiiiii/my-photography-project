@@ -2,6 +2,21 @@
 
 A Spring Boot + Electron desktop application for managing photography journals, albums, and uploaded photos.
 
+## Project overview
+
+This project started as a Spring Boot web application and was later packaged as a Windows desktop application through Electron.
+
+It is designed for photography diary management and includes photo upload, album management, user interaction, and desktop distribution support.
+
+## Main features
+
+- user registration and login
+- photo upload and management
+- album creation and browsing
+- comments, likes, and notifications
+- profile management
+- desktop packaging for Windows
+
 ## Tech stack
 
 - Java 17
@@ -18,6 +33,17 @@ A Spring Boot + Electron desktop application for managing photography journals, 
 - `build/`: desktop packaging assets such as app icons
 - `pom.xml`: backend build configuration
 - `package.json`: desktop packaging configuration
+
+## Recommended for teachers
+
+If you only need to review the source code, browse the following directories first:
+
+- `src/main/java/`
+- `src/main/resources/templates/`
+- `src/main/resources/static/`
+- `electron/`
+
+If you want to run the project locally, follow the run instructions below.
 
 ## What is tracked in GitHub
 
@@ -54,6 +80,12 @@ Or package the backend first:
 ```powershell
 .\mvnw.cmd clean package -DskipTests
 java -jar target/my-photography-project-0.0.1-SNAPSHOT.jar
+```
+
+After the backend starts, open:
+
+```text
+http://127.0.0.1:8080
 ```
 
 ## Desktop development run
@@ -96,7 +128,12 @@ Do not commit machine-specific secrets. Put local overrides in:
 
 See `CONFIGURATION.md` for more details.
 
-## Recommended GitHub upload steps
+## Related documents
+
+- `CONFIGURATION.md`: local configuration and secret handling
+- `DESKTOP.md`: desktop runtime and Windows packaging notes
+
+## GitHub upload reference
 
 From this project directory:
 
