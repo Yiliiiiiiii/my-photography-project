@@ -1,23 +1,23 @@
-# My Photography Project
+# 摄影日记管理系统
 
-A Spring Boot + Electron desktop application for managing photography journals, albums, and uploaded photos.
+这是一个基于 Spring Boot 和 Electron 的摄影日记管理应用，支持以网页形式运行，也支持打包为 Windows 桌面应用。
 
-## Project overview
+## 项目简介
 
-This project started as a Spring Boot web application and was later packaged as a Windows desktop application through Electron.
+本项目最初是一个 Spring Boot Web 应用，后续通过 Electron 封装为桌面端程序。
 
-It is designed for photography diary management and includes photo upload, album management, user interaction, and desktop distribution support.
+系统主要面向摄影作品管理与展示，包含照片上传、相册管理、用户交互以及桌面端发布能力。
 
-## Main features
+## 主要功能
 
-- user registration and login
-- photo upload and management
-- album creation and browsing
-- comments, likes, and notifications
-- profile management
-- desktop packaging for Windows
+- 用户注册、登录与权限控制
+- 照片上传、编辑与管理
+- 相册创建、浏览与分类展示
+- 评论、点赞与通知功能
+- 用户个人资料管理
+- Windows 桌面端打包与运行
 
-## Tech stack
+## 技术栈
 
 - Java 17
 - Spring Boot
@@ -25,130 +25,130 @@ It is designed for photography diary management and includes photo upload, album
 - Electron
 - Node.js
 
-## Project structure
+## 项目结构
 
-- `src/`: Spring Boot backend, templates, static assets, and tests
-- `electron/`: Electron desktop shell entrypoint
-- `scripts/`: helper scripts for desktop packaging
-- `build/`: desktop packaging assets such as app icons
-- `pom.xml`: backend build configuration
-- `package.json`: desktop packaging configuration
+- `src/`：后端源码、页面模板、静态资源与测试代码
+- `electron/`：Electron 桌面端入口代码
+- `scripts/`：桌面打包辅助脚本
+- `build/`：桌面应用图标等资源文件
+- `pom.xml`：后端 Maven 构建配置
+- `package.json`：Electron 相关依赖与打包配置
 
-## Recommended for teachers
+## 给老师查看的建议
 
-If you only need to review the source code, browse the following directories first:
+如果只需要查看主要源码，建议优先阅读以下目录：
 
 - `src/main/java/`
 - `src/main/resources/templates/`
 - `src/main/resources/static/`
 - `electron/`
 
-If you want to run the project locally, follow the run instructions below.
+如果需要运行项目，可参考下方运行说明。
 
-## What is tracked in GitHub
+## GitHub 仓库中包含的内容
 
-This repository is intended to store source code and build configuration only.
+本仓库主要用于保存源代码与构建配置。
 
-Included:
+会上传的内容：
 
-- application source code
-- frontend templates and static assets
-- Electron shell code
-- Maven and npm configuration
-- documentation
+- 项目源代码
+- 前端模板与静态资源
+- Electron 桌面端代码
+- Maven 与 npm 构建配置
+- 项目说明文档
 
-Ignored:
+不会上传的内容：
 
 - `node_modules/`
 - `target/`
 - `dist/`
 - `desktop-runtime/`
-- local logs
-- uploaded runtime files under `src/main/resources/static/uploads/`
-- local machine configuration such as `src/main/resources/application-local.properties`
+- 本地日志文件
+- 运行时上传文件目录 `src/main/resources/static/uploads/`
+- 本地私有配置，如 `src/main/resources/application-local.properties`
 
-## Backend run
+## 后端运行方式
 
-Use the Maven wrapper from the project root:
+在项目根目录执行：
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-Or package the backend first:
+或者先打包再运行：
 
 ```powershell
 .\mvnw.cmd clean package -DskipTests
 java -jar target/my-photography-project-0.0.1-SNAPSHOT.jar
 ```
 
-After the backend starts, open:
+后端启动后，可在浏览器访问：
 
 ```text
 http://127.0.0.1:8080
 ```
 
-## Desktop development run
+## 桌面端开发运行
 
-Install desktop dependencies:
+先安装 Electron 相关依赖：
 
 ```powershell
 npm install
 ```
 
-Start the desktop app:
+再启动桌面应用：
 
 ```powershell
 npm run desktop:dev
 ```
 
-## Desktop installer build
+## 桌面端安装包构建
 
-Create the Windows installer:
+生成 Windows 安装包：
 
 ```powershell
 npm run desktop:dist
 ```
 
-Requirements:
+运行与打包前建议准备好以下环境：
 
 - Node.js
-- JDK 17 or newer
+- JDK 17 或更高版本
 - Maven
-- `JAVA_HOME` configured
+- 已正确配置 `JAVA_HOME`
 
-## Local configuration
+## 本地配置说明
 
-Safe defaults are stored in `src/main/resources/application.properties`.
+安全默认配置位于 `src/main/resources/application.properties`。
 
-Do not commit machine-specific secrets. Put local overrides in:
+不要把本机专用配置或密钥提交到仓库。建议将本地配置放在：
 
 - `src/main/resources/application-local.properties`
-- environment variables
+- 环境变量
 
-See `CONFIGURATION.md` for more details.
+更多说明请参考 `CONFIGURATION.md`。
 
-## Related documents
+## 相关文档
 
-- `CONFIGURATION.md`: local configuration and secret handling
-- `DESKTOP.md`: desktop runtime and Windows packaging notes
+- `CONFIGURATION.md`：本地配置与敏感信息处理说明
+- `DESKTOP.md`：桌面端运行机制与 Windows 打包说明
 
-## GitHub upload reference
+## GitHub 上传参考
 
-From this project directory:
+在项目目录下可使用以下命令上传到 GitHub：
 
 ```powershell
 git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/<your-username>/<your-repo>.git
+git remote add origin https://github.com/<你的用户名>/<你的仓库名>.git
 git push -u origin main
 ```
 
-If the remote already exists, skip the `git remote add origin ...` step and use:
+如果远程仓库地址已经存在，可改用：
 
 ```powershell
-git remote set-url origin https://github.com/<your-username>/<your-repo>.git
+git remote set-url origin https://github.com/<你的用户名>/<你的仓库名>.git
 git push -u origin main
 ```
