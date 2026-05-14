@@ -34,6 +34,3 @@ The main properties file supports these variables:
 - `MYAPP_AVATAR_UPLOAD_DIR`
 - `ALIBABA_API_KEY`
 
-## Important follow-up
-
-The previously committed database password and API key should be rotated because they were already stored in the repository history.
