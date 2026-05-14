@@ -117,14 +117,9 @@ npm run desktop:dist
 - Maven
 - 已正确配置 `JAVA_HOME`
 
-## 本地配置说明
+## 本地配置
 
 安全默认配置位于 `src/main/resources/application.properties`。
-
-不要把本机专用配置或密钥提交到仓库。建议将本地配置放在：
-
-- `src/main/resources/application-local.properties`
-- 环境变量
 
 更多说明请参考 `CONFIGURATION.md`。
 
